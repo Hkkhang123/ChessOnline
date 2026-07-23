@@ -97,7 +97,7 @@ async def websocket_queue(websocket: WebSocket, token: str = Query(...)):
     try:
         await websocket.send_json({"type": "QUEUE_JOINED", "message": "Đã vào hàng chờ!"})
         
-        await manager.add_to_queue(user_id, websocket)
+        await manager.add_to_queue(websocket)
         
         # Duy trì kết nối WebSocket luôn sống
         while True:
