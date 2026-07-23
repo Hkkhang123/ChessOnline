@@ -80,7 +80,7 @@ class ConnectionManager:
                     
     async def add_to_queue(self, websocket: WebSocket):
         """Thêm người chơi vào hàng đợi và giữ kết nối mở"""
-        await websocket.accept()
+        # await websocket.accept()
         
         token = websocket.query_params.get("token")
         user_info = {"id": f"guest_{uuid.uuid4().hex[:6]}", "username": "Guest"}
