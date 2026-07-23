@@ -1,7 +1,7 @@
 import os
 import token
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, status, Query
 from fastapi.middleware.cors import CORSMiddleware
 import json
 import asyncio
@@ -62,24 +62,34 @@ async def timer_broadcast_task(game_id: str):
             print(f"Lỗi gửi time_update: {e}")
             
         await asyncio.sleep(1)
+        
 @app.websocket("/ws/queue")
-async def websocket_queue(websocket: WebSocket):
-    # Hàm add_to_queue sẽ tự quản lý việc giữ kết nối mở và bắt cặp
-    await manager.add_to_queue(websocket)
+async def websocket_queue(websocket: WebSocket, token: str = Query(...)):
+    # 1. LUÔN CHẤP NHẬN KẾT NỐI TRƯỚC
+    await websocket.accept()
+    
     try:
-        # 2. Giải mã token / xác thực user sau khi đã accept
+        # 2. Giải mã token VÀ xử lý logic sau khi đã kết nối thành công
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("sub")
-
+        username = payload.get("username")
+        
         if not user_id:
-            await websocket.close(code=4001) # Token không hợp lệ
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
 
-        # Xử lý logic vào hàng chờ ở đây...
+        # 3. Tiến hành cho người chơi vào hàng chờ (Queue)
+        # await queue_manager.add_player(user_id, websocket)
 
+    except jwt.ExpiredSignatureError:
+        print("Token hết hạn")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+    except jwt.PyJWTError as e:
+        print(f"Lỗi Decode Token: {e}")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
     except Exception as e:
-        print(f"Lỗi WebSocket Queue: {e}")
-        await websocket.close(code=4000)
+        print(f"Lỗi Server: {e}")
+        await websocket.close(code=status.WS_1011_INTERNAL_ERROR)
         
 @app.websocket("/ws/game/{game_id}")
 async def websocket_game(websocket: WebSocket, game_id: str):
