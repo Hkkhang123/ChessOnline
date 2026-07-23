@@ -2,21 +2,25 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# 1. Copy package.json và cài đặt dependencies
 COPY package*.json ./
 RUN npm install
 
-# 2. Copy toàn bộ mã nguồn Frontend
 COPY . .
 
-# 3. Khai báo biến môi trường Build (nếu cần) và Build ứng dụng cho Production
+# 1. Khai báo ARG để nhận biến môi trường từ Render truyền vào lúc build
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_WS_URL
+
+# 2. Chuyển ARG thành ENV cho Next.js đọc được lúc "npm run build"
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# 3. Tiến hành build
 RUN npm run build
 
-# 4. CẤU HÌNH QUAN TRỌNG: Mở mạng cho Render truy cập (Bắt buộc dùng 0.0.0.0)
 ENV HOSTNAME="0.0.0.0"
 ENV PORT=3000
 EXPOSE 3000
 
-# 5. Chạy ứng dụng ở chế độ Production (KHÔNG dùng next dev)
 CMD ["npm", "start"]
