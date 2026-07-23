@@ -63,28 +63,45 @@ async def timer_broadcast_task(game_id: str):
             
         await asyncio.sleep(1)
         
+
+
 @app.websocket("/ws/queue")
 async def websocket_queue(websocket: WebSocket, token: str = Query(...)):
-    # 1. LUÔN CHẤP NHẬN KẾT NỐI WebSocket TRƯỚC
+    # 1. Chấp nhận kết nối WebSocket trước
     await websocket.accept()
     
-    # 2. Giải mã Token bên trong khối try...except
+    # 2. Giải mã Token
+    user_id = None
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("sub")
         if not user_id:
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
+    except Exception as e:
+        print(f"Lỗi Auth WebSocket: {e}")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
 
-        # 3. Tiến hành cho người chơi vào hàng chờ (Queue)
+    try:
+        # Gửi thông báo xác nhận vào queue thành công về Frontend
+        await websocket.send_json({"type": "QUEUE_JOINED", "message": "Đã vào hàng chờ!"})
+        
+        # Thêm player vào queue manager của bạn (nếu có)
         # await queue_manager.add_player(user_id, websocket)
 
-    except jwt.PyJWTError:
-        # Nếu token sai/hết hạn, ngắt kết nối đúng chuẩn WebSocket (không bị 1006)
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        # 🔥 Dòng này giữ cho hàm KHÔNG bị thoát ra, WebSocket sẽ luôn mở
+        while True:
+            data = await websocket.receive_text()
+            # Xử lý tin nhắn từ client nếu có (ví dụ ping/pong)
+
+    except WebSocketDisconnect:
+        # Lắng nghe khi người chơi đóng tab hoặc ngắt kết nối
+        print(f"User {user_id} đã ngắt kết nối WebSocket")
+        # await queue_manager.remove_player(user_id)
+        
     except Exception as e:
-        print(f"Lỗi hệ thống: {e}")
-        await websocket.close(code=status.WS_1011_INTERNAL_ERROR)
+        print(f"Lỗi trong quá trình duy trì WebSocket: {e}")
         
 @app.websocket("/ws/game/{game_id}")
 async def websocket_game(websocket: WebSocket, game_id: str):
