@@ -1,0 +1,9 @@
+fastapi[all]
+uvicorn
+motor
+pydantic[email]
+python-chess
+passlib[bcrypt]
+pyjwt
+python-multipart
+python-jose[cryptography]
