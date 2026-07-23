@@ -1,39 +1,41 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import Link from 'next/link';
-import { Swords, Loader2, LogOut, User } from 'lucide-react';
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import Link from "next/link";
+import { Swords, Loader2, LogOut, User } from "lucide-react";
 
 export default function HomePage() {
   const { user, logout, loading } = useAuth();
   const [isSearching, setIsSearching] = useState(false);
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState("");
   const socketRef = useRef(null);
   const router = useRouter();
   const { token } = useAuth();
-
+  const WS_BASE_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000";
   const toggleMatchmaking = () => {
     if (isSearching) {
       if (socketRef.current) socketRef.current.close();
       setIsSearching(false);
-      setStatus('Đã hủy tìm trận.');
+      setStatus("Đã hủy tìm trận.");
     } else {
       setIsSearching(true);
-      setStatus('Đang kết nối đến hàng đợi...');
+      setStatus("Đang kết nối đến hàng đợi...");
 
-      socketRef.current = new WebSocket(`ws://localhost:8000/ws/queue?token=${token}`);
+      socketRef.current = new WebSocket(
+        `${WS_BASE_URL}/ws/queue?token=${token}`,
+      );
 
       socketRef.current.onopen = () => {
-        setStatus('Đang tìm kiếm đối thủ...');
+        setStatus("Đang tìm kiếm đối thủ...");
       };
 
       socketRef.current.onmessage = (event) => {
         const message = JSON.parse(event.data);
-        if (message.type === 'match_found') {
-          setStatus('Đã tìm thấy trận đấu! Đang chuyển hướng...');
-          sessionStorage.setItem('chess_color', message.payload.color);
+        if (message.type === "match_found") {
+          setStatus("Đã tìm thấy trận đấu! Đang chuyển hướng...");
+          sessionStorage.setItem("chess_color", message.payload.color);
           setTimeout(() => {
             router.push(`/game/${message.payload.game_id}`);
           }, 1000);
@@ -45,7 +47,7 @@ export default function HomePage() {
       };
 
       socketRef.current.onerror = () => {
-        setStatus('Lỗi kết nối đến server.');
+        setStatus("Lỗi kết nối đến server.");
         setIsSearching(false);
       };
     }
@@ -74,7 +76,7 @@ export default function HomePage() {
             <User className="w-4 h-4 text-amber-500" />
             <span>{user.username}</span>
           </div>
-          <button 
+          <button
             onClick={logout}
             className="flex items-center gap-1 text-xs bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 px-2 py-1 rounded-lg border border-rose-900/30 transition"
           >
@@ -88,14 +90,20 @@ export default function HomePage() {
         <h1 className="text-4xl font-extrabold mb-2 tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">
           CHESS ONLINE
         </h1>
-        <p className="text-gray-400 mb-8 text-sm">Hệ thống đấu cờ vua thời gian thực</p>
+        <p className="text-gray-400 mb-8 text-sm">
+          Hệ thống đấu cờ vua thời gian thực
+        </p>
 
         {user ? (
           /* Giao diện khi ĐÃ đăng nhập: Cho phép tìm trận */
           <>
             <div className="flex justify-center mb-8">
-              <div className={`p-6 rounded-full bg-gray-800 border-2 ${isSearching ? 'border-amber-500 animate-pulse' : 'border-gray-700'}`}>
-                <Swords className={`w-16 h-16 ${isSearching ? 'text-amber-400' : 'text-gray-500'}`} />
+              <div
+                className={`p-6 rounded-full bg-gray-800 border-2 ${isSearching ? "border-amber-500 animate-pulse" : "border-gray-700"}`}
+              >
+                <Swords
+                  className={`w-16 h-16 ${isSearching ? "text-amber-400" : "text-gray-500"}`}
+                />
               </div>
             </div>
 
@@ -103,8 +111,8 @@ export default function HomePage() {
               onClick={toggleMatchmaking}
               className={`w-full py-4 px-6 rounded-xl font-bold text-lg tracking-wide transition-all duration-200 flex items-center justify-center gap-2 shadow-lg ${
                 isSearching
-                  ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-900/20'
-                  : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-gray-950 shadow-orange-950/20'
+                  ? "bg-rose-600 hover:bg-rose-700 text-white shadow-rose-900/20"
+                  : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-gray-950 shadow-orange-950/20"
               }`}
             >
               {isSearching ? (
@@ -113,7 +121,7 @@ export default function HomePage() {
                   HỦY TÌM TRẬN
                 </>
               ) : (
-                'TÌM TRẬN NGAY'
+                "TÌM TRẬN NGAY"
               )}
             </button>
 
@@ -127,18 +135,19 @@ export default function HomePage() {
           /* Giao diện khi CHƯA đăng nhập: Hiển thị điều hướng */
           <div className="space-y-4 py-4">
             <p className="text-gray-400 text-sm mb-4">
-              Vui lòng đăng nhập hoặc tạo tài khoản mới để bắt đầu tham gia hàng đợi tìm kiếm trận đấu.
+              Vui lòng đăng nhập hoặc tạo tài khoản mới để bắt đầu tham gia hàng
+              đợi tìm kiếm trận đấu.
             </p>
-            
-            <Link 
-              href="/login" 
+
+            <Link
+              href="/login"
               className="block w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-gray-950 font-bold rounded-xl hover:from-amber-600 hover:to-orange-600 transition text-center shadow-md shadow-orange-950/20"
             >
               ĐĂNG NHẬP
             </Link>
-            
-            <Link 
-              href="/register" 
+
+            <Link
+              href="/register"
               className="block w-full py-3 bg-gray-950 border border-gray-800 text-gray-300 font-semibold rounded-xl hover:bg-gray-800/50 hover:text-white transition text-center"
             >
               ĐĂNG KÝ TÀI KHOẢN

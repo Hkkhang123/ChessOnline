@@ -20,7 +20,7 @@ export default function GamePage() {
   const [connected, setConnected] = useState(false);
   const [opponentLeftMessage, setOpponentLeftMessage] = useState(null);
   const socketRef = useRef(null);
-
+  const WS_BASE_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000";
   useEffect(() => {
     userRef.current = user;
   }, [user]);
@@ -48,7 +48,7 @@ export default function GamePage() {
     console.log("Đang kết nối an toàn với Token hợp lệ...");
     // Kết nối và gửi kèm token qua query để khớp khai báo `token: str = None` của Backend
     socketRef.current = new WebSocket(
-      `ws://localhost:8000/ws/game/${gameId}?token=${token}`,
+      `${WS_BASE_URL}/ws/game/${gameId}?token=${token}`,
     );
 
     socketRef.current.onopen = () => {
