@@ -33,6 +33,17 @@ app.add_middleware(
 async def root():
     return {"status": "ok", "message": "Chess Backend Server is running!"}
 
+@app.websocket("/ws/echo")
+async def websocket_echo(websocket: WebSocket):
+    await websocket.accept()
+    await websocket.send_text("Hello from Render WebSocket!")
+    try:
+        while True:
+            data = await websocket.receive_text()
+            await websocket.send_text(f"Server nhận: {data}")
+    except Exception:
+        pass
+
 app.include_router(auth.router)
 
 # Vòng lặp chạy ngầm để cập nhật đồng hồ đếm ngược và gửi về client mỗi giây
