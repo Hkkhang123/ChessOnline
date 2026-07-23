@@ -76,7 +76,7 @@ async def timer_broadcast_task(game_id: str):
 
 @app.websocket("/ws/queue")
 async def websocket_queue(websocket: WebSocket, token: str = Query(...)):
-    await websocket.accept()
+    # await websocket.accept()
     
     user_id = None
     try:
