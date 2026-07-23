@@ -65,15 +65,13 @@ async def timer_broadcast_task(game_id: str):
         
 @app.websocket("/ws/queue")
 async def websocket_queue(websocket: WebSocket, token: str = Query(...)):
-    # 1. LUÔN CHẤP NHẬN KẾT NỐI TRƯỚC
+    # 1. LUÔN CHẤP NHẬN KẾT NỐI WebSocket TRƯỚC
     await websocket.accept()
     
+    # 2. Giải mã Token bên trong khối try...except
     try:
-        # 2. Giải mã token VÀ xử lý logic sau khi đã kết nối thành công
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("sub")
-        username = payload.get("username")
-        
         if not user_id:
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
@@ -81,14 +79,11 @@ async def websocket_queue(websocket: WebSocket, token: str = Query(...)):
         # 3. Tiến hành cho người chơi vào hàng chờ (Queue)
         # await queue_manager.add_player(user_id, websocket)
 
-    except jwt.ExpiredSignatureError:
-        print("Token hết hạn")
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-    except jwt.PyJWTError as e:
-        print(f"Lỗi Decode Token: {e}")
+    except jwt.PyJWTError:
+        # Nếu token sai/hết hạn, ngắt kết nối đúng chuẩn WebSocket (không bị 1006)
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
     except Exception as e:
-        print(f"Lỗi Server: {e}")
+        print(f"Lỗi hệ thống: {e}")
         await websocket.close(code=status.WS_1011_INTERNAL_ERROR)
         
 @app.websocket("/ws/game/{game_id}")
