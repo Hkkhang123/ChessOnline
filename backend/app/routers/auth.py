@@ -66,7 +66,6 @@ async def login(payload: LoginRequest, db = Depends(get_database)):
             detail="Email hoặc mật khẩu không chính xác."
         )
     
-    # 3. Tạo JWT Token chứa ID (dưới dạng string) và Username của người dùng
     token_data = {
         "sub": str(user["_id"]),
         "username": user["username"],
@@ -74,7 +73,6 @@ async def login(payload: LoginRequest, db = Depends(get_database)):
     }
     access_token = create_access_token(data=token_data)
     
-    # 4. Trả về token
     return {
         "access_token": access_token,
         "token_type": "bearer",

@@ -9,7 +9,7 @@ class ChessGame:
         self.player_usernames = {"white": white_username, "black": black_username}
         self.board = chess.Board()
         
-        # Quản lý thời gian (mặc định 10 phút = 600 giây mỗi bên)
+        # Quản lý thời gian
         self.time_left = {"white": float(initial_time), "black": float(initial_time)}
         self.last_move_time: Optional[float] = None
         self.moves_history = []
@@ -45,7 +45,7 @@ class ChessGame:
                 # Thực hiện nước đi
                 self.board.push(move)
                 self.moves_history.append(move_uci)
-                return None # Không có lỗi
+                return None 
             return "Nước đi không hợp lệ theo luật cờ vua"
         except ValueError:
             return "Định dạng nước đi sai quy định"
@@ -81,7 +81,6 @@ class ChessGame:
                 "black": int(self.time_left["black"])
             },
             "history": self.moves_history,
-            # Sửa phần này: Lấy từ player_ids và player_usernames
             "players": [
                 {
                     "player_id": self.player_ids["white"], 

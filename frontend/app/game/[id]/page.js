@@ -90,7 +90,7 @@ export default function GamePage() {
                 (p) => String(p.player_id || p.id || p.user_id) === myId,
               );
 
-              // Tìm thông tin của ĐỐI THỦ (Khác ID với bạn)
+              // Tìm thông tin của ĐỐI THỦ
               const opponent = players.find(
                 (p) => String(p.player_id || p.id || p.user_id) !== myId,
               );
@@ -103,9 +103,7 @@ export default function GamePage() {
                 setOpponentName(opponent.username);
               }
             } else {
-              console.warn(
-                "[WARNING] Không thể xác định myId từ cả user lẫn token!",
-              );
+              console.warn("Không thể xác định myId từ cả user lẫn token!");
             }
           }
 
@@ -118,7 +116,6 @@ export default function GamePage() {
         }
 
         case "opponent_left":
-          // Bật Modal thông báo trên giao diện
           setOpponentLeftMessage(
             message.payload?.message || "Đối thủ đã rời phòng đấu!",
           );

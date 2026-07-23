@@ -10,7 +10,7 @@ from app.database import db
 
 from app.routers import auth
 from app.cores.websocket_manager import manager
-print(f"[MAIN.PY] Địa chỉ bộ nhớ của manager: {id(manager)}")
+# print(f"[MAIN.PY] Địa chỉ bộ nhớ của manager: {id(manager)}")
 load_dotenv()
 
 SECRET_KEY = os.getenv("JWT_SECRET")
@@ -31,9 +31,7 @@ app.include_router(auth.router)
 # Vòng lặp chạy ngầm để cập nhật đồng hồ đếm ngược và gửi về client mỗi giây
 async def timer_broadcast_task(game_id: str):
     while game_id in manager.game_instances:
-        # Nếu không còn ai trong phòng đấu nữa, tắt task chạy ngầm này ngay lập tức
         if game_id not in manager.active_games or len(manager.active_games[game_id]) == 0:
-            print(f"Dừng task đếm ngược của trận đấu {game_id} do không còn người chơi.")
             break
 
         game = manager.game_instances[game_id]
@@ -86,9 +84,7 @@ async def websocket_game(websocket: WebSocket, game_id: str):
             # Xử lý khi bấm nút "Rời phòng"
             if message.get("type") == "leave_game":
                 is_actively_leaving = True
-                print(f"[DEBUG] Nhận được yêu cầu leave_game từ người chơi.")
                 
-                # 1. Phát thông báo ngay cho người còn lại trong phòng
                 await manager.broadcast_to_others(game_id, {
                     "type": "opponent_left",
                     "payload": {"message": "Đối thủ đã rời phòng đấu!"}
@@ -114,7 +110,7 @@ async def websocket_game(websocket: WebSocket, game_id: str):
                     })
                     
     except WebSocketDisconnect:
-        print(f"[DEBUG] WebSocket ngắt kết nối tại game {game_id}")
+        print(f"WebSocket ngắt kết nối tại game {game_id}")
     finally:
         # Ngắt kết nối socket của người vừa thoát
         manager.disconnect(websocket, game_id)
@@ -124,14 +120,14 @@ async def websocket_game(websocket: WebSocket, game_id: str):
             await asyncio.sleep(2)
             remaining = manager.active_games.get(game_id, [])
             if len(remaining) > 0:
-                print(f"[DEBUG] Phát thông báo mất kết nối đột ngột tới đối thủ.")
+                print(f"thông báo mất kết")
                 await manager.broadcast_to_others(game_id, {
                     "type": "opponent_left",
-                    "payload": {"message": "Đối thủ đã mất kết nối đột ngột!"}
+                    "payload": {"message": "Đối thủ đã mất kết nối"}
                 }, sender_socket=websocket)
 
         # Xóa ván đấu nếu không còn ai
         remaining = manager.active_games.get(game_id, [])
         if len(remaining) == 0 and game_id in manager.game_instances:
             del manager.game_instances[game_id]
-            print(f"[DEBUG] Đã xóa trận đấu trống {game_id}")
+            print(f"Đã xóa trận đấu trống {game_id}")

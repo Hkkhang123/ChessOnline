@@ -37,7 +37,6 @@ class ConnectionManager:
         if game_id in self.active_games and websocket in self.active_games[game_id]:
             self.active_games[game_id].remove(websocket)
             if not self.active_games[game_id]:
-                # Xóa game instance nếu không còn ai trong phòng
                 if game_id in self.game_instances:
                     del self.game_instances[game_id]
                 del self.active_games[game_id]
@@ -46,7 +45,6 @@ class ConnectionManager:
         if game_id not in self.active_games:
             return
 
-        # Tạo danh sách các socket bị lỗi để dọn dẹp sau
         dead_sockets = []
         
         for connection in self.active_games[game_id]:
@@ -65,20 +63,20 @@ class ConnectionManager:
 
     async def broadcast_to_others(self, game_id: str, message: dict, sender_socket: WebSocket):
         if game_id not in self.active_games:
-            print(f"[DEBUG] Không tìm thấy game_id {game_id} trong active_games")
+            print(f"Không tìm thấy game_id {game_id} trong active_games")
             return
 
         connections = self.active_games[game_id]
-        print(f"[DEBUG] Số kết nối đang có trong phòng {game_id}: {len(connections)}")
+        print(f"Số kết nối đang có trong phòng {game_id}: {len(connections)}")
         
         for connection in connections:
             # Gửi tin nhắn cho tất cả kết nối TRỪ người bấm nút thoát
             if connection != sender_socket:
                 try:
                     await connection.send_text(json.dumps(message))
-                    print(f"[DEBUG] Đã gửi thông báo '{message['type']}' thành công tới đối thủ!")
+                    print(f"Đã gửi thông báo '{message['type']}' thành công tới đối thủ!")
                 except Exception as e:
-                    print(f"[ERROR] Lỗi gửi thông báo cho đối thủ: {e}")
+                    print(f"Lỗi gửi thông báo cho đối thủ: {e}")
                     
     async def add_to_queue(self, websocket: WebSocket):
         """Thêm người chơi vào hàng đợi và giữ kết nối mở"""
@@ -118,7 +116,7 @@ class ConnectionManager:
                 self.game_instances[new_game_id].start_timer()
                 print(f"Khởi tạo trận đấu thành công: {new_game_id}")
             except Exception as e:
-                print(f"Lỗi nghiêm trọng khi tạo instance ChessGame: {e}")
+                print(f"Lỗi khi tạo instance ChessGame: {e}")
                 # Nếu lỗi, gửi thông báo đóng kết nối an toàn cho client để tránh bị treo
                 await player1_socket.close(code=1011)
                 await player2_socket.close(code=1011)
@@ -132,8 +130,6 @@ class ConnectionManager:
                 "payload": {"game_id": new_game_id, "color": "black"}
             }))
             return 
-
-        # Để giữ kết nối cho người chơi đang đợi một mình
         try:
             while True:
                 await websocket.receive_text()
