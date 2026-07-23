@@ -26,6 +26,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+@app.head("/")
+async def root():
+    return {"status": "ok", "message": "Chess Backend Server is running!"}
+
 app.include_router(auth.router)
 
 # Vòng lặp chạy ngầm để cập nhật đồng hồ đếm ngược và gửi về client mỗi giây
