@@ -1,20 +1,22 @@
-# Sử dụng Node.js bản chính thức
-FROM node:20-alpine
+FROM node:18-alpine
 
-# Thiết lập thư mục làm việc trong container
 WORKDIR /app
 
-# Sao chép các file cấu hình package trước để tối ưu hóa cache của Docker
+# 1. Copy package.json và cài đặt dependencies
 COPY package*.json ./
+RUN npm install
 
-# Cài đặt các dependencies
-RUN npm install --legacy-peer-deps
-
-# Sao chép toàn bộ mã nguồn frontend vào container
+# 2. Copy toàn bộ mã nguồn Frontend
 COPY . .
 
-# Mở cổng 3000 cho Next.js
+# 3. Khai báo biến môi trường Build (nếu cần) và Build ứng dụng cho Production
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm run build
+
+# 4. CẤU HÌNH QUAN TRỌNG: Mở mạng cho Render truy cập (Bắt buộc dùng 0.0.0.0)
+ENV HOSTNAME="0.0.0.0"
+ENV PORT=3000
 EXPOSE 3000
 
-# Chạy Next.js ở chế độ phát triển (Development) để bạn vừa code vừa hot-reload được
-CMD ["npm", "run", "dev"]
+# 5. Chạy ứng dụng ở chế độ Production (KHÔNG dùng next dev)
+CMD ["npm", "start"]
