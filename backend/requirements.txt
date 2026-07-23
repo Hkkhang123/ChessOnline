@@ -7,3 +7,5 @@ passlib[bcrypt]
 pyjwt
 python-multipart
 python-jose[cryptography]
+uvicorn[standard]
+websockets
