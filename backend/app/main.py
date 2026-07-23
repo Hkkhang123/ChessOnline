@@ -1,4 +1,5 @@
 import os
+import token
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -65,7 +66,21 @@ async def timer_broadcast_task(game_id: str):
 async def websocket_queue(websocket: WebSocket):
     # Hàm add_to_queue sẽ tự quản lý việc giữ kết nối mở và bắt cặp
     await manager.add_to_queue(websocket)
+    try:
+        # 2. Giải mã token / xác thực user sau khi đã accept
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
 
+        if not user_id:
+            await websocket.close(code=4001) # Token không hợp lệ
+            return
+
+        # Xử lý logic vào hàng chờ ở đây...
+
+    except Exception as e:
+        print(f"Lỗi WebSocket Queue: {e}")
+        await websocket.close(code=4000)
+        
 @app.websocket("/ws/game/{game_id}")
 async def websocket_game(websocket: WebSocket, game_id: str):
     game_instance = manager.game_instances.get(game_id)
